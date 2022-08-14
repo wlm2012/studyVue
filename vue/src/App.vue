@@ -2,9 +2,7 @@
   <a-layout>
     <the-header></the-header>
     <router-view/>
-    <a-layout-footer style="text-align: center">
-      ebook1
-    </a-layout-footer>
+    <the-footer></the-footer>
   </a-layout>
 </template>
 
@@ -12,11 +10,13 @@
 <script lang="ts">
 import {defineComponent} from 'vue';
 import theHeader from '@/components/the-header.vue'; // @ is an alias to /src
+import theFooter from '@/components/the-footer.vue';
 
 export default defineComponent({
   name: 'HomeView',
   components: {
     theHeader,
+    theFooter
   },
 });
 </script>
