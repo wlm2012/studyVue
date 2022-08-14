@@ -10,7 +10,7 @@
         <a-sub-menu key="sub1">
           <template #title>
               <span>
-                <user-outlined />
+                <user-outlined/>
                 subnav 1
               </span>
           </template>
@@ -22,7 +22,7 @@
         <a-sub-menu key="sub2">
           <template #title>
               <span>
-                <laptop-outlined />
+                <laptop-outlined/>
                 subnav 2
               </span>
           </template>
@@ -34,7 +34,7 @@
         <a-sub-menu key="sub3">
           <template #title>
               <span>
-                <notification-outlined />
+                <notification-outlined/>
                 subnav 3
               </span>
           </template>
@@ -48,19 +48,45 @@
     <a-layout-content
         :style="{ background: '#fff', padding: '24px', margin: 0, minHeight: '280px' }"
     >
-      Content
+      <pre>
+{{ books }}
+----------
+{{ ebooks }}
+      </pre>
     </a-layout-content>
   </a-layout>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import {defineComponent, onMounted, ref, reactive, toRef} from 'vue';
 import HelloWorld from '@/components/HelloWorld.vue'; // @ is an alias to /src
+import axios from "axios";
 
 export default defineComponent({
   name: 'HomeView',
   components: {
     // HelloWorld,
   },
+
+  setup() {
+    console.log("setup")
+    const ebooks = ref();
+    const ebooks1 = reactive({books: []})
+    onMounted(() => {
+      axios.get("http://localhost:9904/book/list?name=spring")
+          .then((response) => {
+            const data = response.data;
+            ebooks.value = data;
+            ebooks1.books = data;
+            console.log(response);
+            console.log(data.content);
+          })
+    })
+
+    return {
+      ebooks,
+      books: toRef(ebooks1, "books")
+    }
+  }
 });
 </script>
