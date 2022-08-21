@@ -48,37 +48,23 @@
     <a-layout-content
         :style="{ background: '#fff', padding: '24px', margin: 0, minHeight: '280px' }"
     >
-      <a-list item-layout="vertical" size="large" :pagination="pagination" :data-source="listData">
-        <template #footer>
-          <div>
-            <b>ant design vue</b>
-            footer part
-          </div>
-        </template>
+      <a-list item-layout="vertical" size="large" :grid="{ gutter: 16, column: 4 }" :pagination="pagination" :data-source="ebooks">
         <template #renderItem="{ item }">
-          <a-list-item key="item.title">
+          <a-list-item key="item.name">
             <template #actions>
           <span v-for="{ type, text } in actions" :key="type">
             <component :is="type" style="margin-right: 8px"/>
             {{ text }}
           </span>
             </template>
-            <template #extra>
-              <img
-                  width="272"
-                  alt="logo"
-                  src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
-              />
-            </template>
             <a-list-item-meta :description="item.description">
               <template #title>
-                <a :href="item.href">{{ item.title }}</a>
+                <a :href="item.href">{{ item.name }}</a>
               </template>
               <template #avatar>
-                <a-avatar :src="item.avatar"/>
+                <a-avatar :src="item.cover"/>
               </template>
             </a-list-item-meta>
-            {{ item.content }}
           </a-list-item>
         </template>
       </a-list>
@@ -119,6 +105,20 @@ export default defineComponent({
   },
 
   setup() {
+    const ebooks = ref();
+    onMounted(() => {
+
+      axios.get("http://localhost:9904/book/list?name=spring")
+          .then((response) => {
+            const data = response.data;
+            ebooks.value = data.content;
+            console.log(response);
+            console.log(data.content);
+          })
+    })
+
+
+
     const pagination = {
       onChange: (page: number) => {
         console.log(page);
@@ -134,7 +134,19 @@ export default defineComponent({
       listData,
       pagination,
       actions,
+      ebooks,
     };
   },
 });
 </script>
+
+<style scoped>
+.ant-avatar{
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  border-radius: 8%;
+  margin: 5px 0;
+}
+
+</style>
