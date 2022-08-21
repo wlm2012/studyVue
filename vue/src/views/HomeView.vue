@@ -108,7 +108,7 @@ export default defineComponent({
     const ebooks = ref();
     onMounted(() => {
 
-      axios.get("http://localhost:9904/book/list?name=spring")
+      axios.get("/book/list?name=spring")
           .then((response) => {
             const data = response.data;
             ebooks.value = data.content;
