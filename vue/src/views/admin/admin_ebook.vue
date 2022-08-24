@@ -3,119 +3,166 @@
     <a-layout-content
         :style="{ background: '#fff', padding: '24px', margin: 0, minHeight: '280px' }"
     >
-      <a-table :columns="columns" :data-source="data">
-        <template #headerCell="{ column }">
-          <template v-if="column.key === 'name'">
-        <span>
-          <smile-outlined />
-          Name
-        </span>
-          </template>
+      <p>
+        <a-form layout="inline" :model="param">
+          <a-form-item>
+            <a-input v-model:value="param.name" placeholder="名称">
+            </a-input>
+          </a-form-item>
+          <a-form-item>
+            <a-button type="primary" @click="handleQuery({page: 1, size: pagination.pageSize})">
+              查询
+            </a-button>
+          </a-form-item>
+          <a-form-item>
+            <a-button type="primary" @click="add()">
+              新增
+            </a-button>
+          </a-form-item>
+        </a-form>
+      </p>
+      <a-table
+          :columns="columns"
+          :row-key="record => record.id"
+          :data-source="ebooks"
+          :pagination="pagination"
+          :loading="loading"
+          @change="handleTableChange"
+      >
+        <template #cover="{ text: cover }">
+          <img v-if="cover" :src="cover" alt="avatar"/>
         </template>
-
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'name'">
-            <a>
-              {{ record.name }}
-            </a>
-          </template>
-          <template v-else-if="column.key === 'tags'">
-        <span>
-          <a-tag
-              v-for="tag in record.tags"
-              :key="tag"
-              :color="tag === 'loser' ? 'volcano' : tag.length > 5 ? 'geekblue' : 'green'"
-          >
-            {{ tag.toUpperCase() }}
-          </a-tag>
-        </span>
-          </template>
-          <template v-else-if="column.key === 'action'">
-        <span>
-          <a>Invite 一 {{ record.name }}</a>
-          <a-divider type="vertical" />
-          <a>Delete</a>
-          <a-divider type="vertical" />
-          <a class="ant-dropdown-link">
-            More actions
-            <down-outlined />
-          </a>
-        </span>
-          </template>
+        <template v-slot:action="{ text, record }">
+          <a-space size="small">
+            <a-button type="primary">
+              编辑
+            </a-button>
+            <a-button type="danger">
+              删除
+            </a-button>
+          </a-space>
         </template>
       </a-table>
-      <div class="about">
-        <h1>This is an ebook page</h1>
-      </div>
     </a-layout-content>
   </a-layout>
 </template>
 
 
 <script lang="ts">
-import { SmileOutlined, DownOutlined } from '@ant-design/icons-vue';
-import { defineComponent } from 'vue';
-const columns = [
-  {
-    name: 'Name',
-    dataIndex: 'name',
-    key: 'name',
-  },
-  {
-    title: 'Age',
-    dataIndex: 'age',
-    key: 'age',
-  },
-  {
-    title: 'Address',
-    dataIndex: 'address',
-    key: 'address',
-  },
-  {
-    title: 'Tags',
-    key: 'tags',
-    dataIndex: 'tags',
-  },
-  {
-    title: 'Action',
-    key: 'action',
-  },
-];
+import {defineComponent, onMounted, ref} from 'vue';
+import axios from "axios";
 
-const data = [
-  {
-    key: '1',
-    name: 'John Brown',
-    age: 32,
-    address: 'New York No. 1 Lake Park',
-    tags: ['nice', 'developer'],
-  },
-  {
-    key: '2',
-    name: 'Jim Green',
-    age: 42,
-    address: 'London No. 1 Lake Park',
-    tags: ['loser'],
-  },
-  {
-    key: '3',
-    name: 'Joe Black',
-    age: 32,
-    address: 'Sidney No. 1 Lake Park',
-    tags: ['cool', 'teacher'],
-  },
-];
 
 export default defineComponent({
-  components: {
-    SmileOutlined,
-    DownOutlined,
-  },
+  name: 'AdminEbook',
   setup() {
-    return {
-      data,
-      columns,
+    const ebooks = ref();
+    const pagination = ref({
+      current: 1,
+      pageSize: 2,
+      total: 0
+    });
+    const loading = ref(false);
+
+
+    const columns = [
+      {
+        title: '封面',
+        dataIndex: 'cover',
+        slots: {customRender: 'cover'}
+      },
+      {
+        title: '名称',
+        dataIndex: 'name'
+      },
+      {
+        title: '分类一',
+        key: 'category1Id',
+        dataIndex: 'category1Id'
+      },
+      {
+        title: '分类二',
+        key: 'category2Id',
+      },
+      {
+        title: '文档数',
+        dataIndex: 'docCount'
+      },
+      {
+        title: '阅读数',
+        dataIndex: 'viewCount'
+      },
+      {
+        title: '点赞数',
+        dataIndex: 'voteCount'
+      },
+      {
+        title: 'Action',
+        key: 'action',
+        slots: {customRender: 'action'}
+      }
+    ];
+
+
+    /**
+     * 数据查询
+     **/
+    const handleQuery = (params: any) => {
+      loading.value = true;
+      // 如果不清空现有数据，则编辑保存重新加载数据后，再点编辑，则列表显示的还是编辑前的数据
+      ebooks.value = [];
+      axios.get("/ebook/list", {
+        params: {
+          page: params.page,
+          size: params.size,
+          // name: param.value.name
+        }
+      }).then((response) => {
+        loading.value = false;
+        const data = response.data;
+        if (data.success) {
+          ebooks.value = data.content.list;
+
+          // 重置分页按钮
+          pagination.value.current = params.page;
+          pagination.value.total = data.content.total;
+        } else {
+          // message.error(data.message);
+        }
+      });
     };
-  },
+
+    /**
+     * 表格点击页码时触发
+     */
+    const handleTableChange = (pagination: any) => {
+      console.log("看看自带的分页参数都有啥：" + pagination);
+      handleQuery({
+        page: pagination.current,
+        size: pagination.pageSize
+      });
+    };
+
+    onMounted(() => {
+      handleQuery({})
+    })
+
+    return {
+      ebooks,
+      pagination,
+      columns,
+      loading,
+      handleTableChange
+    }
+  }
 });
 </script>
+
+
+<style scoped>
+img {
+  width: 50px;
+  height: 50px;
+}
+</style>
+
